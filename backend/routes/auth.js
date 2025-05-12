@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
@@ -17,4 +17,4 @@ router.post('/login', async (req, res) => {
   res.json({ token });
 });
 
-module.exports = router;
+export default router;
