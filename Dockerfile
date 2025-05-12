@@ -1,14 +1,7 @@
-FROM node:18-alphine
-
+FROM node:18-slim
 WORKDIR /app
-
-# Copia somente arquivos necessários primeiro (para melhor cache)
 COPY package*.json ./
-RUN npm install --omit=dev --no-audit --prefer-offline
-
-# Agora sim copia o restante do código
+RUN npm ci --omit=dev
 COPY . .
-
-EXPOSE 3001
-
-CMD ["node", "index.js"]
+EXPOSE 5000
+CMD ["npm", "start"]

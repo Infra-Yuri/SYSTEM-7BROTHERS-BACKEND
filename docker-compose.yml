@@ -1,26 +1,21 @@
-version: '3'
+version: '3.8'
 services:
-  postgres:
-    image: postgres
-    environment:
-      POSTGRES_DB: seteirmaos
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: \Sete@2025
+  db:
+    image: postgres:13-alpine
+    restart: always
+    env_file:
+      - .env
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - db-data:/var/lib/postgresql/data
+
   backend:
-    build: ./backend
+    build: .
     ports:
-      - "3001:3001"
+      - '5000:5000'
+    env_file:
+      - .env
     depends_on:
-      - postgres
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASS=\Sete@2025
-      - DB_NAME=seteirmaos
+      - db
+
 volumes:
-  pgdata:
+  db-data:
