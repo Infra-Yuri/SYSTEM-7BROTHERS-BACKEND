@@ -6,6 +6,9 @@ import productsRoutes from './routes/products.js';
 import pedidosRoutes from './routes/pedidos.js';
 import authRoutes from './routes/auth.js';
 import reportsRoutes from './routes/reports.js';
+import dbfRoutes from './routes/dbf.js';
+
+
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -15,6 +18,7 @@ app.use('/auth', authRoutes);
 app.use('/pedidos', pedidosRoutes);
 app.use('/products', productsRoutes);
 app.use('/reports', reportsRoutes);
+app.use('/dbf', dbfRoutes);
 
 const PORT = process.env.PORT || 5000;
 // Bind em 0.0.0.0 para aceitar conexões do host
