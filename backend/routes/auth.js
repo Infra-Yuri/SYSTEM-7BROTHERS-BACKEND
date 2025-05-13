@@ -1,7 +1,7 @@
 import express from 'express';
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const pool = require('../db');
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import pool from '../db.js';
 const router = express.Router();
 
 router.post('/login', async (req, res) => {

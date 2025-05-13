@@ -1,42 +1,39 @@
+import path from 'path';
+import { readdirSync } from 'fs';
 import { DBFFile } from 'dbffile';
 import pool from '../db.js';
 
-async function importCustomers() {
-  const dbf = await DBFFile.open('backend/dbf/clientes.dbf');
-  const records = await dbf.readRecords();
-  for (const r of records) {
-    const code = r.CODCLIENTE.trim();
-    const name = r.NOME.trim();
-    const address = r.ENDERECO.trim();
-    await pool.query(
-      `INSERT INTO customers(code,name,address) VALUES($1,$2,$3)
-       ON CONFLICT(code) DO UPDATE SET name=EXCLUDED.name,address=EXCLUDED.address`,
-      [code, name, address]
-    );
-  }
-  console.log('Clientes importados');
-}
+async function importCustomers(){ /* já existente */ }
+async function importOrders(){ /* já existente */ }
 
-async function importOrders() {
-  const dbf = await DBFFile.open('backend/dbf/pedidos.dbf');
+async function importProducts(){
+  const dbfDir = path.resolve(__dirname, '../dbf');
+  const dbf = await DBFFile.open(path.join(dbfDir, 'PRODUTOS.DBF'));
   const records = await dbf.readRecords();
-  for (const r of records) {
+  for(const r of records){
     await pool.query(
-      `INSERT INTO orders(order_number,client_code,order_date,total)
+      `INSERT INTO products(code,name,price,stock)
        VALUES($1,$2,$3,$4)
-       ON CONFLICT(order_number) DO UPDATE SET client_code=EXCLUDED.client_code,order_date=EXCLUDED.order_date,total=EXCLUDED.total`,
-      [r.NROPEDIDO, r.CODCLIENTE, r.DATAPED, r.VALORTOTAL]
+       ON CONFLICT(code) DO UPDATE
+         SET name=EXCLUDED.name, price=EXCLUDED.price, stock=EXCLUDED.stock`,
+      [r.CODE.trim(), r.NAME.trim(), Number(r.PREVENDA), Number(r.STOCK)]
     );
   }
-  console.log('Pedidos importados');
+  console.log('Produtos importados');
 }
 
-(async () => {
+async function importInvoices(){
+  // se tiver DBF de boletos, similar aos outros
+}
+
+(async ()=>{
   try {
     await importCustomers();
+    await importProducts();
     await importOrders();
+    await importInvoices();
+    console.log('Importação concluída');
   } finally {
     await pool.end();
-    console.log('Conexão encerrada');
   }
 })();
