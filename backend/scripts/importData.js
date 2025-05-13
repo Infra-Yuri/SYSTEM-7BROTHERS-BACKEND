@@ -1,39 +1,41 @@
 import path from 'path';
-import { readdirSync } from 'fs';
 import { DBFFile } from 'dbffile';
-import pool from '../db.js';
+import db from '../src/db/knex.js';
 
-async function importCustomers(){ /* já existente */ }
-async function importOrders(){ /* já existente */ }
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-async function importProducts(){
-  const dbfDir = path.resolve(__dirname, '../dbf');
-  const dbf = await DBFFile.open(path.join(dbfDir, 'PRODUTOS.DBF'));
-  const records = await dbf.readRecords();
-  for(const r of records){
-    await pool.query(
-      `INSERT INTO products(code,name,price,stock)
-       VALUES($1,$2,$3,$4)
-       ON CONFLICT(code) DO UPDATE
-         SET name=EXCLUDED.name, price=EXCLUDED.price, stock=EXCLUDED.stock`,
-      [r.CODE.trim(), r.NAME.trim(), Number(r.PREVENDA), Number(r.STOCK)]
-    );
+async function importTable(name, table, mapping) {
+  const dbf  = await DBFFile.open(path.join(__dirname, '../dbf', `${name}.DBF`));
+  const rows = await dbf.readRecords();
+  for (const r of rows) {
+    const data = mapping(r);
+    await db(table).insert(data).onConflict().merge();
   }
-  console.log('Produtos importados');
+  console.log(`${name} importados`);
 }
 
-async function importInvoices(){
-  // se tiver DBF de boletos, similar aos outros
-}
-
-(async ()=>{
+(async () => {
   try {
-    await importCustomers();
-    await importProducts();
-    await importOrders();
-    await importInvoices();
-    console.log('Importação concluída');
+    await importTable('CLIENTES', 'customers', r => ({
+      code:    r.CODE.trim(),
+      name:    r.NAME.trim(),
+      address: r.ADDRESS?.trim(),
+      salesperson_id: null
+    }));
+    await importTable('PRODUTOS', 'products', r => ({
+      code:  r.CODE.trim(), name: r.NAME.trim(),
+      price: Number(r.PRICE), stock: Number(r.STOCK)
+    }));
+    await importTable('PEDIDOS', 'orders', r => ({
+      order_number: r.NUMBER,
+      client_code:  r.CLIENT.trim(),
+      order_date:   r.DATE,
+      total:        Number(r.TOTAL)
+    }));
+    // invoices, usuarios etc se necessários
+  } catch (err) {
+    console.error(err);
   } finally {
-    await pool.end();
+    db.destroy();
   }
 })();

@@ -1,0 +1,28 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'migrations/**'
+      - 'scripts/**'
+      - 'package.json'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'migrations/**'
+      - 'scripts/**'
+      - 'package.json'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with: { node-version: '18' }
+      - run: npm install
+      - run: npm run lint
+      - run: npm run migrate
+      - run: npm run import
+      - run: npm test
